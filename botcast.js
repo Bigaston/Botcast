@@ -5,7 +5,12 @@ var Parser = require('rss-parser');
 const client = new Discord.Client();
 
 sq.verbose();
-var db = new sq.Database(__dirname + "/base.db");
+
+if (config.is_dev) {
+	var db = new sq.Database(__dirname + "/baseDev.db");	
+} else {
+	var db = new sq.Database(__dirname + "/base.db");
+}
 
 client.on('ready', () => {
 	console.log('Lancement du serveur');
@@ -142,6 +147,35 @@ client.on('message', message => {
 			}
 		}
 
+		if (args[1] == "help") {
+			message.delete();
+			if (message.member.hasPermission('ADMINISTRATOR')) {
+				const embed = {
+					"title": "Commades administrateurs de Botcast",
+					"description": "Pour executer ces commandes, utilisez `@botcast` suivit de la commande et des arguments!\nLes arguments entre [] sont obligatoires, ceux entre () sont optionnels.",
+					"color": 16098851,
+					"fields": [
+						{
+							"name": "here",
+							"value": "Définit le channel de notification où est exécuté la commande."
+						},
+						{
+							"name": "add `[Flux RSS]`",
+							"value": "Ajoute le flux RSS à la base de donnée."
+						},
+						{
+							"name": "notif `(true/false)`",
+							"value": "Si un argument, change le paremètre de notification à activé (true), ou désactivé (false). Si il n'y a pas d'arguments, affiche les paramètres actuels."
+						}
+					]
+				};
+
+				message.channel.send({ embed })
+			} else {
+				message.reply("Il n'y a pas de commandes pour les utilisateurs pour le moment!")
+			}
+		}
+
 		if (args[1] == "notif") {
 			message.delete();
 			if (message.member.hasPermission('ADMINISTRATOR')) {
@@ -219,5 +253,9 @@ client.on('message', message => {
 		}		
 	}
 });
-  
-client.login(config.token);
+
+if (config.is_dev) {
+	client.login(config.token_dev)
+} else {
+	client.login(config.token);
+}
