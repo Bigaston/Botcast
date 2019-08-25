@@ -60,6 +60,5 @@ typings/
 # next.js build output
 .next
 
-base.db-journal
-base.db
 config.json
+base.db
