@@ -166,13 +166,73 @@ client.on('message', message => {
 						{
 							"name": "notif `(true/false)`",
 							"value": "Si un argument, change le paremètre de notification à activé (true), ou désactivé (false). Si il n'y a pas d'arguments, affiche les paramètres actuels."
+						},
+						{
+							"name": "list",
+							"value": "Affiche la liste des flux enregistrés sur ce serveur"
+						},
+						{
+							"name": "delete [numéro]",
+							"value": "Supprime le flux numéro [numéro]. Pour connaitre le numéro d'un flux, utilisez `@botcast list`"
+						},
+						{
+							"name": "help",
+							"value": "Affiche cette aide"
 						}
 					]
 				};
 
 				message.channel.send({ embed })
 			} else {
-				message.reply("Il n'y a pas de commandes pour les utilisateurs pour le moment!")
+				message.author.send("Il n'y a pas de commandes pour les utilisateurs pour le moment!")
+			}
+		}
+
+		if (args[1] == "list") {
+			message.delete();
+			if (message.member.hasPermission('ADMINISTRATOR')) {
+				db.all(`SELECT * FROM podcast WHERE serveur_id="${message.guild.id}"`, function(err, rows) {
+					if (rows.length != 0) {
+						to_send = ":page_facing_up: Il y a actuellement " + rows.length + " flux enregistrés sur ce serveur."
+
+						for(i = 0; i < rows.length; i++) {
+							to_send = to_send + "\n`[" + i + "]` - " + rows[i].feed_url
+
+							if (to_send.length > 1500 && i != rows.length-1) {
+								message.channel.send(to_send)
+								to_send = ""
+							}
+						}
+
+						message.channel.send(to_send)
+					} else {
+						message.channel.send(":warning: Il n'y a actuellement pas de flux sur ce serveur! Utilisez `@botcast add [flux]` pour en ajoute!")
+					}
+				})
+			} else {
+				message.author.send(":no_entry: Désolé " + message.author.username + " mais tu n'as pas les droits d'administration dans **" + message.guild.name + "**")
+			}
+		}
+
+		if (args[1] == "delete") {
+			message.delete();
+			if (message.member.hasPermission('ADMINISTRATOR')) {
+				if (args.length != 3) {
+					message.channel.send(":warning: Vous devez spécifier un numéro de flux. Pour les voir, utilisez la commande `@botcast list`")
+				} else {
+					db.all(`SELECT * FROM podcast WHERE serveur_id="${message.guild.id}"`, function(err, rows) {
+						if (args[2] >= rows.length) {
+							message.channel.send(":warning: Vous essayez de supprimer le flux numéro **" + args[2] + "** mais les numéros vont seulement jusqu'à **" + rows.length-1 + "**! Utilisez `@botcast list` pour voir les numéros!")
+						} else if (args[2] < 0 ) {
+							message.channel.send(":warning: Les numéros de flux ne vont que jusqu'à **0**! Utilisez `@botcast list` pour voir les numéros!")
+						} else {
+							db.run(`DELETE FROM podcast WHERE feed_url="${rows[args[2]].feed_url}"`)
+							message.channel.send(`:fire: Le flux ${rows[args[2]].feed_url} a bien été supprimé de la base!`)
+						}
+					})
+				}
+			} else {
+				message.author.send(":no_entry: Désolé " + message.author.username + " mais tu n'as pas les droits d'administration dans **" + message.guild.name + "**")
 			}
 		}
 
