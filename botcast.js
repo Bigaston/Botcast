@@ -64,7 +64,7 @@ function sendMessage(row_podcast, feed) {
 			  },
 			  {
 				"name": "Posté par",
-				"value": feed.items[0].creator,
+				"value": feed.items[0].itunes.author,
 				"inline": true
 			  },
 			  {
