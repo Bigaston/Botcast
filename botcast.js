@@ -3,6 +3,9 @@ const config = require("./config.json");
 var sq = require('sqlite3');
 var Parser = require('rss-parser');
 const client = new Discord.Client();
+const package = require("./package.json")
+
+parser = new Parser();
 
 sq.verbose();
 
@@ -16,13 +19,12 @@ client.on('ready', () => {
 	console.log('Lancement du serveur');
 	checkRSS()
 	setInterval(checkRSS, 300000)
-	client.user.setActivity("vérifier quelques flux RSS")
+	client.user.setActivity("V" + package.version)
 });
 
 
 function checkRSS() {
 	db.each("SELECT * FROM podcast", function(err, row) {
-		parser = new Parser();
 		parser.parseURL(row.feed_url, function(err, feed) {
 
 			if (row.last_guid == "" || feed.items[0].guid != row.last_guid) {
@@ -41,10 +43,20 @@ function sendMessage(row_podcast, feed) {
 			chan = client.users.get(rows[0].channel)
 		}
 
+		desc = ""
+		author = "Nobody"
+		console.log(feed)
+
+		if (feed.items[0].itunes.author != undefined) {
+			author = feed.items[0].itunes.author
+		} else if (feed.itunes.author != undefined) {
+			author = feed.itunes.author
+		}
+
 		if (feed.items[0].contentSnippet.length > 280) {
-			desc = feed.items[0].contentSnippet.substring(0, 280) + " [...]"
+			desc = desc + feed.items[0].contentSnippet.substring(0, 280) + " [...]"
 		} else {
-			desc = feed.items[0].contentSnippet
+			desc = desc + feed.items[0].contentSnippet
 		}
 
 		const embed = {
@@ -69,7 +81,7 @@ function sendMessage(row_podcast, feed) {
 			  },
 			  {
 				"name": "Posté par",
-				"value": feed.items[0].itunes.author,
+				"value": author,
 				"inline": true
 			  },
 			  {
@@ -176,6 +188,10 @@ client.on('message', message => {
 							"value": "Supprime le flux numéro [numéro]. Pour connaitre le numéro d'un flux, utilisez `@botcast list`"
 						},
 						{
+							"name": "forceupdate [numéro]",
+							"value": "Oblige le bot à relancer le dernier épisode du flux spécifié en numéro"
+						},
+						{
 							"name": "help",
 							"value": "Affiche cette aide"
 						}
@@ -266,6 +282,31 @@ client.on('message', message => {
 				})
 			} else {
 				message.author.send(":no_entry: Désolé " + message.author.username + " mais tu n'as pas les droits d'administration dans **" + message.guild.name + "**");
+			}
+		}
+
+		if (args[1] == "forceupdate") {
+			message.delete();
+			if (message.member.hasPermission('ADMINISTRATOR')) {
+				if (args.length != 3) {
+					message.channel.send(":warning: Vous devez spécifier un numéro de flux. Pour les voir, utilisez la commande `@botcast list`")
+				} else {
+					db.all(`SELECT * FROM podcast WHERE serveur_id="${message.guild.id}"`, function(err, rows) {
+						if (args[2] >= rows.length) {
+							message.channel.send(":warning: Vous essayez de mettre à jour le flux numéro **" + args[2] + "** mais les numéros vont seulement jusqu'à **" + rows.length-1 + "**! Utilisez `@botcast list` pour voir les numéros!")
+						} else if (args[2] < 0 ) {
+							message.channel.send(":warning: Les numéros de flux ne vont que jusqu'à **0**! Utilisez `@botcast list` pour voir les numéros!")
+						} else {
+							db.run(`UPDATE podcast SET last_guid=null WHERE feed_url="${rows[args[2]].feed_url}"`)
+							db.each(`SELECT * FROM podcast WHERE feed_url="${rows[args[2]].feed_url}"`, function(err, row) {
+								parser.parseURL(row.feed_url, function(err, feed) {
+									db.run("UPDATE podcast SET last_guid='" + feed.items[0].guid + "' WHERE feed_url='" + row.feed_url + "'")
+									sendMessage(row, feed)
+								})
+							})
+						}
+					})
+				}
 			}
 		}
 	} else if (message.channel.type == "dm" ) {
