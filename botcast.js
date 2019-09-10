@@ -163,7 +163,7 @@ client.on('message', message => {
 			message.delete();
 			if (message.member.hasPermission('ADMINISTRATOR')) {
 				const embed = {
-					"title": "Commades administrateurs de Botcast",
+					"title": "Commandes administrateurs de Botcast",
 					"description": "Pour executer ces commandes, utilisez `@botcast` suivit de la commande et des arguments!\nLes arguments entre [] sont obligatoires, ceux entre () sont optionnels.",
 					"color": 16098851,
 					"fields": [
