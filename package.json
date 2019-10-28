@@ -1,6 +1,6 @@
 {
   "name": "botcast",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "A Discord bot based on NodeJS to give information about your podcast in your Discord server",
   "main": "botcast.js",
   "scripts": {
