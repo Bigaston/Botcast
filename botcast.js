@@ -22,10 +22,13 @@ client.on('ready', () => {
 function checkRSS() {
 	db.each("SELECT * FROM podcast", function(err, row) {
 		parser.parseURL(row.feed_url, function(err, feed) {
-
-			if (row.last_guid == "" || feed.items[0].guid != row.last_guid) {
-				db.run("UPDATE podcast SET last_guid='" + feed.items[0].guid + "' WHERE feed_url='" + row.feed_url + "'")
-				sendMessage(row, feed)
+			if (err) {
+				client.users.get("136747654871777280").send(`:x: __**Erreur :**__ Le flux RSS ${row.feed_url} n'est pas trouvé. \n\`\`\`${err}\n\`\`\``)
+			} else {
+				if (row.last_guid == "" || feed.items[0].guid != row.last_guid) {
+					db.run("UPDATE podcast SET last_guid='" + feed.items[0].guid + "' WHERE feed_url='" + row.feed_url + "'")
+					sendMessage(row, feed)
+				}
 			}
 		})
 	})
@@ -102,7 +105,7 @@ function sendMessage(row_podcast, feed) {
 			mess = rows[0].default_message
 		}
 
-		mess = mess.replace("%feed_title%", feed.title)
+		mess = mess.replace("%feed_title%", feed.title).replace("%post_title%", feed.items[0].title)
 
 		if (row_podcast.notif == 1) {
 			chan.send("@everyone " + mess)
@@ -201,8 +204,8 @@ client.on('message', message => {
 				"color": 16098851,
 				"fields": [
 					{
-						"name": "here",
-						"value": "Définit le channel de notification où est exécuté la commande."
+						"name": "here `(numéro)`",
+						"value": "Définit le channel de notification où est exécuté la commande. Si un numéro est spécifié, précise ce channel pour le flux selectionné"
 					},
 					{
 						"name": "add `[Flux RSS]`",
@@ -226,7 +229,7 @@ client.on('message', message => {
 					},
 					{
 						"name": "message (message)",
-						"value": "Permet de modifier le message apparaissant quand un épisode sort. Si pas de message spécifié, il remet le message par défaut. Le message doit contenit %feed_title% qui sera remplacé par le titre du podcast."
+						"value": "Permet de modifier le message apparaissant quand un épisode sort. Si pas de message spécifié, il remet le message par défaut. Le message peut contenir **%feed_title%** qui sera remplacé par le titre du podcast, ou **%post_title%** qui sera remplacé par le titre de la publication."
 					},
 					{
 						"name": "help",
@@ -408,13 +411,9 @@ client.on('message', message => {
 						message.channel.send(":pen_fountain: Le message d'annonce a été réinitialisé!")
 					} else {
 						mess = args.slice(2).join(" ")
-
-						if (mess.match("%feed_title%") == undefined) {
-							message.channel.send(":warning: Il faut mettre à un endroit dans votre message **%feed_title%** pour qu'il puisse être remplacé par le nom de votre podcast!")
-						} else {
-							db.run(`UPDATE serveur SET default_message="${mess}" WHERE serveur_id=${message.guild.id}`)
-							message.channel.send(":pen_fountain: Le message d'annonce a été modifié!\n> " + mess.replace("%feed_title%", "Exemple"))
-						}
+						db.run(`UPDATE serveur SET default_message="${mess}" WHERE serveur_id=${message.guild.id}`)
+						
+						message.channel.send(":pen_fountain: Le message d'annonce a été modifié!\n> " + mess.replace("%feed_title%", "Exemple Titre Flux").replace("%post_title%", "Exemple Titre Publication"))
 					}
 				} else {
 					message.author.send(":warning: Merci de commencer par définir le channel par défaut pour recevoir les actualités sur les podcasts avec la commande `here`!")
