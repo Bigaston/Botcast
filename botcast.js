@@ -105,7 +105,7 @@ function sendMessage(row_podcast, feed) {
 			mess = rows[0].default_message
 		}
 
-		mess = mess.replace("%feed_title%", feed.title).replace("%post_title%", feed.items[0].title)
+		mess = mess.replace("%feed_title%", feed.title).replace("%post_title%", feed.items[0].title).replace("%post_link%", feed.items[0].link)
 
 		if (row_podcast.notif == 1) {
 			chan.send("@everyone " + mess)
@@ -229,7 +229,7 @@ client.on('message', message => {
 					},
 					{
 						"name": "message (message)",
-						"value": "Permet de modifier le message apparaissant quand un épisode sort. Si pas de message spécifié, il remet le message par défaut. Le message peut contenir **%feed_title%** qui sera remplacé par le titre du podcast, ou **%post_title%** qui sera remplacé par le titre de la publication."
+						"value": "Permet de modifier le message apparaissant quand un épisode sort. Si pas de message spécifié, il remet le message par défaut. Le message peut contenir **%feed_title%** qui sera remplacé par le titre du podcast, **%post_title%** qui sera remplacé par le titre de la publication, ou **%post_link%** qui sera remplacé par le lien vers la publication."
 					},
 					{
 						"name": "help",
@@ -413,7 +413,7 @@ client.on('message', message => {
 						mess = args.slice(2).join(" ")
 						db.run(`UPDATE serveur SET default_message="${mess}" WHERE serveur_id=${message.guild.id}`)
 						
-						message.channel.send(":pen_fountain: Le message d'annonce a été modifié!\n> " + mess.replace("%feed_title%", "Exemple Titre Flux").replace("%post_title%", "Exemple Titre Publication"))
+						message.channel.send(":pen_fountain: Le message d'annonce a été modifié!\n> " + mess.replace("%feed_title%", "Exemple Titre Flux").replace("%post_title%", "Exemple Titre Publication").replace("%post_link%", "https://example.com"))
 					}
 				} else {
 					message.author.send(":warning: Merci de commencer par définir le channel par défaut pour recevoir les actualités sur les podcasts avec la commande `here`!")
