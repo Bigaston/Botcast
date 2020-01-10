@@ -1,37 +1,76 @@
 # Botcast
-Un bot Discord pour envoyer des alertes quand vous sortez un nouvel épisode
+## Un bot Discord pour envoyer des alertes quand vous sortez un nouvel épisode
 
-[🤖 Inviter le bot](https://discordapp.com/oauth2/authorize?client_id=601394082689974282&scope=bot&permissions=191552)
+Exemple d'alerte :
+![Message Botcast](https://i.imgur.com/e1oUBmh.png)
 
-## Help
+### Mise en place
+
+1. [🤖 Inviter le bot](https://discordapp.com/oauth2/authorize?client_id=601394082689974282&scope=bot&permissions=191552)
+2. Allez dans le channel où vous voulez envoyer les messages d'alertes et exécutez `@botcast here`
+3. Ajoutez votre premier flux avec `@botcast add http://adresse_du_flux`
+4. Attendez quelques minutes et vous devriez avoir un message annonçant la sortie du dernier épisode du flux.
+5. Enjoy
+
+### Manuel d'utilisation
 Pour executer ces commandes, utilisez `@botcast` suivit de la commande et des arguments!
 Les arguments entre [] sont obligatoires, ceux entre () sont optionnels.
 
-Invitez le bot sur votre serveur Discord, ensuite allez dans le channel où vous voulez envoyer les messages d'alertes et exécutez `@botcast here`, et ensuite ajoutez des flux avec `@botcast add le_flux`.
-
-### here (numéro)
+#### here (numéro)
 Définit le channel de notification où est exécuté la commande. Si un numéro est spécifié, précise ce channel pour le flux selectionné
 
-### add [Flux RSS]
+```@botcast here```
+
+
+#### add [Flux RSS]
 Ajoute le flux RSS à la base de donnée.
 
-### notif [default/numéro] (true/false/@role)
+```@botcast add https://robotsettondeuses.lepodcast.fr/rss```
+
+
+#### notif [default/numéro] (true/false/@role)
 Si un argument, change le paremètre de notification sur tous les podcasts (default) ou sur un podcast (numéro) à everyone (true), désactivé (false) ou sur un rôle. Si il n'y a pas d'arguments, affiche les paramètres actuels.
 
-### list
+```@botcast notif 1``` 
+
+```@botcast notif 1 false```
+
+```@botcast notif default false```
+
+
+#### list
 Affiche la liste des flux enregistrés sur ce serveur
 
-### delete [numéro]
+```@botcast list``` 
+
+#### delete [numéro]
 Supprime le flux numéro [numéro]. Pour connaitre le numéro d'un flux, utilisez `@botcast list`
 
-### forceupdate (numéro)
+```@botcast delete 1``` 
+
+
+#### forceupdate (numéro)
 Oblige le bot à relancer le dernier épisode du flux spécifié en numéro. Si pas de numéro spécifié, il va relancer tous les flux
 
-### message (message)
-Permet de modifier le message apparaissant quand un épisode sort. Si pas de message spécifié, il remet le message par défaut. Le message peut contenir **%feed_title%** qui sera remplacé par le titre du podcast, **%post_title%** qui sera remplacé par le titre de la publication, ou **%post_link%** qui sera remplacé par le lien vers la publication.
+```@botcast forceupdate``` 
 
-### help
+```@botcast forceupdate 1``` 
+
+
+#### message (message)
+Permet de modifier le message apparaissant au-dessus de l'encart de prévisualisation quand un épisode sort. 
+
+Si pas de message spécifié, il remet le message par défaut. Le message peut contenir **%feed_title%** qui sera remplacé par le titre du podcast, **%post_title%** qui sera remplacé par le titre de la publication, ou **%post_link%** qui sera remplacé par le lien vers la publication.
+
+Le message par défaut est :
+
+```@botcast message :tada: Un nouvel épisode de **%feed_title%** est sorti!```
+
+#### help
 Affiche cette aide
 
-## Contact
+```@botcast help``` 
+
+
+### Contact
 En cas de problème avec le bot, n'hésitez pas à venir pinger [@Bigaston](https://twitter.com/Bigaston)!
