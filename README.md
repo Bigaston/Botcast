@@ -29,13 +29,26 @@ Ajoute le flux RSS à la base de donnée.
 
 
 #### notif [default/numéro] (true/false/@role)
-Si un argument, change le paremètre de notification sur tous les podcasts (default) ou sur un podcast (numéro) à everyone (true), désactivé (false) ou sur un rôle. Si il n'y a pas d'arguments, affiche les paramètres actuels.
+Permet d'utiliser le système de notification @everyone ou @user pour que les personnes concernées aient une alerte.
 
-```@botcast notif 1``` 
+Si un argument, change le paramètre de notification sur tous les podcasts (default) ou sur un podcast (numéro) à (true), désactivé (false) ou sur un rôle. Si il n'y a pas d'arguments, affiche les paramètres actuels.
 
-```@botcast notif 1 false```
+##### Réglages globaux
 
-```@botcast notif default false```
+Activer les notifications de tous les podcasts : ```@botcast notif default true```
+
+Cela change le message et ajoute @everyone au début
+
+![Message Botcast Notif](https://i.imgur.com/rXAVUrY.png)
+
+Désactiver les notifications de tous les podcasts (réglage par défaut) : ```@botcast notif default false```
+
+##### Réglages individuels
+
+Afficher l'état des notifications du podcast 1 : ```@botcast notif 1``` 
+
+Désactiver les notifications du podcast 1 : ```@botcast notif 1 false```
+
 
 
 #### list
