@@ -25,6 +25,8 @@ function checkRSS() {
 			if (err) {
 				client.users.get("136747654871777280").send(`:x: __**Erreur :**__ Le flux RSS ${row.feed_url} n'est pas trouvé. \n\`\`\`${err}\n\`\`\``)
 			} else {
+				feed.items = feed.items.sort(sortItems);
+				
 				if (row.last_guid == "" || feed.items[0].guid != row.last_guid) {
 					db.run("UPDATE podcast SET last_guid='" + feed.items[0].guid + "' WHERE feed_url='" + row.feed_url + "' AND serveur_id='" + row.serveur_id + "'")
 					sendMessage(row, feed)
@@ -32,6 +34,19 @@ function checkRSS() {
 			}
 		})
 	})
+}
+
+function sortItems(a, b) {
+	let date_a = new Date(a.isoDate);
+	let date_b = new Date(b.isoDate);
+
+	if (date_a < date_b ) {
+		return 1;
+	} else if (date_a > date_b) {
+		return -1;
+	} else {
+		return 0
+	}
 }
 
 function sendMessage(row_podcast, feed) {
@@ -386,6 +401,8 @@ client.on('message', message => {
 				db.run(`UPDATE podcast SET last_guid=null WHERE serveur_id="${message.guild.id}"`)
 				db.each(`SELECT * FROM podcast WHERE serveur_id="${message.guild.id}"`, function(err, row) {
 					parser.parseURL(row.feed_url, function(err, feed) {
+						feed.items = feed.items.sort(sortItems);
+
 						db.run("UPDATE podcast SET last_guid='" + feed.items[0].guid + "' WHERE feed_url='" + row.feed_url + "'")
 						sendMessage(row, feed)
 					})
@@ -400,6 +417,8 @@ client.on('message', message => {
 						db.run(`UPDATE podcast SET last_guid=null WHERE feed_url="${rows[args[2]].feed_url}" AND serveur_id="${message.guild.id}"`)
 						db.each(`SELECT * FROM podcast WHERE feed_url="${rows[args[2]].feed_url}" AND serveur_id="${message.guild.id}"`, function(err, row) {
 							parser.parseURL(row.feed_url, function(err, feed) {
+								feed.items = feed.items.sort(sortItems);
+
 								db.run("UPDATE podcast SET last_guid='" + feed.items[0].guid + "' WHERE feed_url='" + row.feed_url + "' AND serveur_id='" +message.guild.id + "'")
 								sendMessage(row, feed)
 							})
