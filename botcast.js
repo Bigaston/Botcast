@@ -60,10 +60,18 @@ function sendMessage(row_podcast, feed) {
 			author = feed.itunes.author
 		}
 
-		if (feed.items[0].contentSnippet.length > 280) {
-			desc = desc + feed.items[0].contentSnippet.substring(0, 280) + " [...]"
+		let origin_desc = "";
+
+		if (!!feed.items[0].contentSnippet) {
+			origin_desc = feed.items[0].contentSnippet
+		} else if (feed.items[0].itunes != undefined && !!feed.items[0].itunes.summary) {
+			origin_desc = feed.items[0].itunes.summary
+		}
+
+		if (origin_desc > 280) {
+			desc = desc + origin_desc.substring(0, 280) + " [...]"
 		} else {
-			desc = desc + feed.items[0].contentSnippet
+			desc = desc + origin_desc
 		}
 
 		const embed = {
