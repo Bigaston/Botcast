@@ -66,8 +66,7 @@ function sendMessage(row_podcast, feed) {
 			return;
 		}
 
-		desc = ""
-		author = "Nobody"
+		var author = "Nobody"
 
 		if (feed.items[0].itunes.author != undefined) {
 			author = feed.items[0].itunes.author
@@ -83,10 +82,12 @@ function sendMessage(row_podcast, feed) {
 			origin_desc = feed.items[0].itunes.summary
 		}
 
-		if (origin_desc > 280) {
-			desc = desc + origin_desc.substring(0, 280) + " [...]"
+		var desc = ""
+
+		if (origin_desc.length > 500) {
+			desc = origin_desc.substring(0, 500) + " [...]"
 		} else {
-			desc = desc + origin_desc
+			desc = origin_desc
 		}
 
 		const embed = {
