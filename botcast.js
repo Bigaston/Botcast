@@ -4,6 +4,16 @@ var sq = require('sqlite3');
 var Parser = require('rss-parser');
 const client = new Discord.Client();
 const package = require("./package.json")
+const fs = require("fs")
+
+// Importation des chaines de caractères
+let lang = {};
+
+fs.readdirSync("./lang").forEach(file => {
+	lang[file.replace(".json", "")] = require("./lang/" + file);
+})
+
+console.log(lang)
 
 parser = new Parser();
 
@@ -23,7 +33,7 @@ function checkRSS() {
 	db.each("SELECT * FROM podcast", function(err, row) {
 		parser.parseURL(row.feed_url, function(err, feed) {
 			if (err) {
-				client.users.get("136747654871777280").send(`:x: __**Erreur :**__ Le flux RSS ${row.feed_url} n'est pas trouvé. \n\`\`\`${err}\n\`\`\``)
+				client.users.get(config.user_id).send(`:x: __**Erreur :**__ Le flux RSS ${row.feed_url} n'est pas trouvé. \n\`\`\`${err}\n\`\`\``)
 			} else {
 				if (row.last_guid == "" || feed.items[0].guid != row.last_guid) {
 					db.run("UPDATE podcast SET last_guid='" + feed.items[0].guid + "' WHERE feed_url='" + row.feed_url + "'")
@@ -47,7 +57,7 @@ function sendMessage(row_podcast, feed) {
 		}
 
 		if (chan == undefined) {
-			client.users.get("136747654871777280").send(":x: Le channel n'existe pas pour " + row_podcast.feed_url + " dans **" + client.guilds.get(row_podcast.serveur_id).name + "**")
+			client.users.get(config.user_id).send(":x: Le channel n'existe pas pour " + row_podcast.feed_url + " dans **" + client.guilds.get(row_podcast.serveur_id).name + "**")
 			return;
 		}
 
@@ -67,11 +77,10 @@ function sendMessage(row_podcast, feed) {
 		}
 
 		const embed = {
-			"content" : "@everyone :tada: Un épisode vient de sortir!",
 			"author": {
 				"name": feed.items[0].title,
 				"url": feed.items[0].link
-			  },
+			},
 			"description": feed.title,
 			"color": 16098851,
 			"timestamp": feed.items[0].isoDate,
@@ -83,24 +92,24 @@ function sendMessage(row_podcast, feed) {
 			},
 			"fields": [
 			  {
-				"name": "Description",
+				"name": lang[rows[0].lang].description,
 				"value": desc
 			  },
 			  {
-				"name": "Posté par",
+				"name": lang[rows[0].lang].author,
 				"value": author,
 				"inline": true
 			  },
 			  {
-				"name": "Fichier audio",
-				"value": "[Ecouter](" + feed.items[0].enclosure.url + ")",
+				"name": lang[rows[0].lang].audio_file,
+				"value": "[" + lang[rows[0].lang].listen + "](" + feed.items[0].enclosure.url + ")",
 				"inline": true
 			  }
 			]
 		  };
 
 		if (rows[0].default_message == undefined || rows[0].default_message == "") {
-			mess = ":tada: Un nouvel épisode de **%feed_title%** est sorti!"
+			mess = lang[rows[0].lang].default_message
 		} else {
 			mess = rows[0].default_message
 		}
@@ -133,42 +142,42 @@ client.on('message', message => {
 		message.delete();
 
 		if (args.length == 2) {
-			if (message.member.hasPermission('ADMINISTRATOR')) {
-				db.all(`SELECT * FROM serveur WHERE serveur_id="${message.guild.id}"`, function(err, rows) {
+			db.all(`SELECT * FROM serveur WHERE serveur_id="${message.guild.id}"`, function(err, rows) {
+				if (message.member.hasPermission('ADMINISTRATOR')) {
 					if (rows.length != 0) {
 						db.run(`UPDATE serveur SET default_channel="${message.channel.id}" WHERE serveur_id="${message.guild.id}"`)
-						message.channel.send(":satellite: Le channel d'annonce par défaut a été définit ici, dans le channel **" + message.channel.name + "**")
-						//	.catch(message.author.send(":warning: Je n'ai pas les permissions d'écrire dans le channel **" + message.channel.name + "**"));
+						message.channel.send(lang[rows[0].lang].here.replace("%channel_name%", message.channel.name))
 					} else {
 						db.run(`INSERT INTO serveur (serveur_id, default_channel, default_notif) VALUES ("${message.guild.id}", "${message.channel.id}", 0)`)
-						message.channel.send(":satellite: Le channel d'annonce par défaut a été définit ici, dans le channel **" + message.channel.name + "**")
-						//	.catch(message.author.send(":warning: Je n'ai pas les permissions d'écrire dans le channel **" + message.channel.name + "**"));	
+						message.channel.send(lang.en.here.replace("%channel_name%", message.channel.name))
+					}
+				} else {
+					message.author.send(lang[rows[0].lang].not_admin.replace("%username%", message.author.username).replace("%guild_name%", message.guild.name));
+				}
+			})
+		} else {
+			db.all(`SELECT * FROM serveur WHERE serveur_id="${message.guild.id}"`, (err, rows_server) => {
+				db.all(`SELECT * FROM podcast WHERE serveur_id="${message.guild.id}"`, function(err, rows) {
+					if (args[2] >= rows.length) {
+						message.channel.send(lang[rows_server[0].lang].error_max_feed.replace("%feed_number%", args[2]).replace("%max_feed_number%", rows.length-1));
+					} else if (args[2] < 0 ) {
+						message.channel.send(lang[rows_server[0].lang].error_max_feed)
+					} else {
+						db.run(`UPDATE podcast SET channel="${message.channel.id}" WHERE feed_url="${rows[args[2]].feed_url}"`)
+						message.channel.send(lang[rows_server[0].lang].here_feed.replace("%feed_url%", rows[args[2]].feed_url).replace("%channel_name%", message.channel.name))
 					}
 				})
-			} else {
-				message.author.send(":no_entry: Désolé " + message.author.username + " mais tu n'as pas les droits d'administration dans **" + message.guild.name + "**");
-			}
-		} else {
-			db.all(`SELECT * FROM podcast WHERE serveur_id="${message.guild.id}"`, function(err, rows) {
-				if (args[2] >= rows.length) {
-					message.channel.send(":warning: Vous essayez de modifier le flux numéro **" + args[2] + "** mais les numéros vont seulement jusqu'à **" + rows.length-1 + "**! Utilisez `@botcast list` pour voir les numéros!")
-				} else if (args[2] < 0 ) {
-					message.channel.send(":warning: Les numéros de flux ne vont que jusqu'à **0**! Utilisez `@botcast list` pour voir les numéros!")
-				} else {
-					db.run(`UPDATE podcast SET channel="${message.channel.id}" WHERE feed_url="${rows[args[2]].feed_url}"`)
-					message.channel.send(":satellite: Le channel d'annonce pour " + rows[args[2]].feed_url + " a été définit ici, dans le channel **" + message.channel.name + "**")
-				}
 			})
 		}
 	}
 
 	if (args[1] == "add") {
 		message.delete();
-		if (message.member.hasPermission('ADMINISTRATOR')) {
-			db.all(`SELECT * FROM serveur WHERE serveur_id="${message.guild.id}"`, function(err, rows) {
-				if (rows.length != 0) {
+		db.all(`SELECT * FROM serveur WHERE serveur_id="${message.guild.id}"`, function(err, rows_server) {
+			if (message.member.hasPermission('ADMINISTRATOR')) {
+				if (rows_server.length != 0) {
 					if (args.length <= 2) {
-						message.channel.send(":warning: Il faut spécifier l'URL du flux RSS après la commande! Exemple : `@Botcast add http://example.com/rss`")
+						message.channel.send(lang[rows_server[0].lang].add.no_rss)
 						return;
 					}
 					db.all(`SELECT * FROM podcast WHERE serveur_id="${message.guild.id}" AND feed_url="${args[2]}"`, function(err, rows) {
@@ -177,22 +186,22 @@ client.on('message', message => {
 							parser.parseURL(args[2], function(err, feed) {
 								if (feed != undefined) {
 									db.run(`INSERT INTO podcast (serveur_id, feed_url, notif, channel) VALUES ("${message.guild.id}", "${args[2]}", "0", "0")`)
-									message.channel.send(":tada: Le flux `" + args[2] + "` a bien été ajouté dans la base!")
+									message.channel.send(lang[rows_server[0].lang].add.ok.replace("%feed_url%", args[2]))
 								} else {
-									message.channel.send(":warning: Le flux spécifié `" + args[2] + "` n'est pas un flux RSS valide!")
+									message.channel.send(lang[rows_server[0].lang].add.not_valid.replace("%feed_url%", args[2]))
 								}
 							})
 						} else {
-							message.channel.send(":warning: Le flux est déjà dans la base!")
+							message.channel.send(lang[rows_server[0].lang].add.inside)
 						}
 					})
 				} else {
-					message.author.send(":warning: Merci de commencer par définir le channel par défaut pour recevoir les actualités sur les podcasts avec la commande `here`!")
+					message.author.send(lang[rows_server[0].lang].add.define_here)
 				}
-			})
-		} else {
-			message.author.send(":no_entry: Désolé " + message.author.username + " mais tu n'as pas les droits d'administration dans **" + message.guild.name + "**");
-		}
+			} else {
+				message.author.send(lang[rows_server[0].lang].not_admin.replace("%username%", message.author.username).replace("%guild_name%", message.guild.name));
+			}
+		})
 	}
 
 	if (args[1] == "help") {
