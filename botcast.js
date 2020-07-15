@@ -35,13 +35,28 @@ function checkRSS() {
 			if (err) {
 				client.users.get(config.user_id).send(`:x: __**Erreur :**__ Le flux RSS ${row.feed_url} n'est pas trouvé. \n\`\`\`${err}\n\`\`\``)
 			} else {
+				feed.items = feed.items.sort(sortItems);
+				
 				if (row.last_guid == "" || feed.items[0].guid != row.last_guid) {
-					db.run("UPDATE podcast SET last_guid='" + feed.items[0].guid + "' WHERE feed_url='" + row.feed_url + "'")
+					db.run("UPDATE podcast SET last_guid='" + feed.items[0].guid + "' WHERE feed_url='" + row.feed_url + "' AND serveur_id='" + row.serveur_id + "'")
 					sendMessage(row, feed)
 				}
 			}
 		})
 	})
+}
+
+function sortItems(a, b) {
+	let date_a = new Date(a.isoDate);
+	let date_b = new Date(b.isoDate);
+
+	if (date_a < date_b ) {
+		return 1;
+	} else if (date_a > date_b) {
+		return -1;
+	} else {
+		return 0
+	}
 }
 
 function sendMessage(row_podcast, feed) {
@@ -61,8 +76,7 @@ function sendMessage(row_podcast, feed) {
 			return;
 		}
 
-		desc = ""
-		author = "Nobody"
+		var author = "Nobody"
 
 		if (feed.items[0].itunes.author != undefined) {
 			author = feed.items[0].itunes.author
@@ -70,10 +84,20 @@ function sendMessage(row_podcast, feed) {
 			author = feed.itunes.author
 		}
 
-		if (feed.items[0].contentSnippet.length > 280) {
-			desc = desc + feed.items[0].contentSnippet.substring(0, 280) + " [...]"
+		let origin_desc = "";
+
+		if (!!feed.items[0].contentSnippet) {
+			origin_desc = feed.items[0].contentSnippet
+		} else if (feed.items[0].itunes != undefined && !!feed.items[0].itunes.summary) {
+			origin_desc = feed.items[0].itunes.summary
+		}
+
+		var desc = ""
+
+		if (origin_desc.length > 500) {
+			desc = origin_desc.substring(0, 500) + " [...]"
 		} else {
-			desc = desc + feed.items[0].contentSnippet
+			desc = origin_desc
 		}
 
 		const embed = {
@@ -291,7 +315,7 @@ client.on('message', message => {
 					} else if (args[2] < 0 ) {
 						message.channel.send(":warning: Les numéros de flux ne vont que jusqu'à **0**! Utilisez `@botcast list` pour voir les numéros!")
 					} else {
-						db.run(`DELETE FROM podcast WHERE feed_url="${rows[args[2]].feed_url}"`)
+						db.run(`DELETE FROM podcast WHERE feed_url="${rows[args[2]].feed_url}" AND serveur_id="${message.guild.id}"`)
 						message.channel.send(`:fire: Le flux ${rows[args[2]].feed_url} a bien été supprimé de la base!`)
 					}
 				})
@@ -355,13 +379,13 @@ client.on('message', message => {
 									return;
 								} else {
 									if (args[3].toLowerCase() == "true") {
-										db.run(`UPDATE podcast SET notif=1 WHERE feed_url="${rows[args[2]].feed_url}"`)
+										db.run(`UPDATE podcast SET notif=1 WHERE feed_url="${rows[args[2]].feed_url}" AND serveur_id="${message.guild.id}"`)
 										message.channel.send(":white_check_mark: La notification pour " + rows[args[2]].feed_url +" est maintenant sur everyone!")
 									} else if (args[3].toLowerCase() == "false") {
-										db.run(`UPDATE podcast SET notif=0 WHERE feed_url="${rows[args[2]].feed_url}"`)
+										db.run(`UPDATE podcast SET notif=0 WHERE feed_url="${rows[args[2]].feed_url}" AND serveur_id="${message.guild.id}"`)
 										message.channel.send(":x: La notification pour " + rows[args[2]].feed_url +" est maintenant désactivée!")
 									} else if (args[3].match(/<@&[0-9]*>/) != undefined) {
-										db.run(`UPDATE podcast SET notif=${args[3].match(/<@&[0-9]*>/)[0].replace("<@&", "").replace(">", "")} WHERE feed_url="${rows[args[2]].feed_url}"`)
+										db.run(`UPDATE podcast SET notif=${args[3].match(/<@&[0-9]*>/)[0].replace("<@&", "").replace(">", "")} WHERE feed_url="${rows[args[2]].feed_url}" AND serveur_id="${message.guild.id}"`)
 										message.channel.send(":white_check_mark: La notification pour " + rows[args[2]].feed_url + " est activée sur " + args[3].match(/<@&[0-9]*>/)[0] +"!")								
 									} else {
 										message.author.send(":warning: Il faut spécifier un booléen `true/false` ou un role")
@@ -387,6 +411,8 @@ client.on('message', message => {
 				db.run(`UPDATE podcast SET last_guid=null WHERE serveur_id="${message.guild.id}"`)
 				db.each(`SELECT * FROM podcast WHERE serveur_id="${message.guild.id}"`, function(err, row) {
 					parser.parseURL(row.feed_url, function(err, feed) {
+						feed.items = feed.items.sort(sortItems);
+
 						db.run("UPDATE podcast SET last_guid='" + feed.items[0].guid + "' WHERE feed_url='" + row.feed_url + "'")
 						sendMessage(row, feed)
 					})
@@ -398,10 +424,12 @@ client.on('message', message => {
 					} else if (args[2] < 0 ) {
 						message.channel.send(":warning: Les numéros de flux ne vont que jusqu'à **0**! Utilisez `@botcast list` pour voir les numéros!")
 					} else {
-						db.run(`UPDATE podcast SET last_guid=null WHERE feed_url="${rows[args[2]].feed_url}"`)
-						db.each(`SELECT * FROM podcast WHERE feed_url="${rows[args[2]].feed_url}"`, function(err, row) {
+						db.run(`UPDATE podcast SET last_guid=null WHERE feed_url="${rows[args[2]].feed_url}" AND serveur_id="${message.guild.id}"`)
+						db.each(`SELECT * FROM podcast WHERE feed_url="${rows[args[2]].feed_url}" AND serveur_id="${message.guild.id}"`, function(err, row) {
 							parser.parseURL(row.feed_url, function(err, feed) {
-								db.run("UPDATE podcast SET last_guid='" + feed.items[0].guid + "' WHERE feed_url='" + row.feed_url + "'")
+								feed.items = feed.items.sort(sortItems);
+
+								db.run("UPDATE podcast SET last_guid='" + feed.items[0].guid + "' WHERE feed_url='" + row.feed_url + "' AND serveur_id='" +message.guild.id + "'")
 								sendMessage(row, feed)
 							})
 						})
