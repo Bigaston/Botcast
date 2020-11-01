@@ -14,7 +14,8 @@ Exemple d'alerte :
 5. Enjoy
 
 ### Manuel d'utilisation
-Pour executer ces commandes, utilisez `@botcast` suivit de la commande et des arguments!
+Pour executer ces commandes, utilisez `@botcast` suivit de la commande et des arguments! Vous pouvez aussi préfixer votre commande par `?`.
+__**Exemple:**__ `@botcast list` ou `?list`
 Les arguments entre [] sont obligatoires, ceux entre () sont optionnels.
 
 #### here (numéro)
