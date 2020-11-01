@@ -1,0 +1,19 @@
+{
+    "description": "Description",
+    "author": "Author",
+    "audio_file": "Audio file",
+    "listen": "Listen",
+    "default_message": ":tada: A new episode of **%feed_title%** is here!",
+    "here": ":satellite: The annoncement channel was defined here, in the channel called **%channel_name%**",
+    "here_feed": ":satellite: The annoncement channel for `%feed_url%` was defined here, in the channel called **%channel_name%**",
+    "add": {
+        "no_rss": ":warning: You need to put a RSS feed after the command! Exemple : `@Botcast add http://example.com/rss`",
+        "ok": ":tada: Feed `%feed_url%` is now in the datebase!",
+        "not_valid": ":warning: Feed `%feed_url%` is not a valid RSS Feed!",
+        "inside": ":warning: This feed is already in database",
+        "define_here": ":warning: Please start by define an annoncement channel with the `here` command!"
+    },
+    "not_admin": ":no_entry: Sorry %username% you don't have the admin right in **%guild_name%**",
+    "error_max_feed": ":warning: You try to edit the feed number **%feed_numer%** but the number of feed just go to **%max_feed_number%**! Use `@botcast list` to see the numbers!",
+    "error_min_feed": ":warning: Feed numbers doesn't go under **0**! Use `@botcast list` to see the numbers!"
+}

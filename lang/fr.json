@@ -1,0 +1,19 @@
+{
+    "description": "Description",
+    "author": "Posté par",
+    "audio_file": "Fichier audio",
+    "listen": "Ecouter",
+    "default_message": ":tada: Un nouvel épisode de **%feed_title%** est sorti!",
+    "here": ":satellite: Le channel d'annonce par défaut a été définit ici, dans le channel **%channel_name%**",
+    "here_feed": ":satellite: Le channel d'annonce pour %feed_url% a été définit ici, dans le channel **%channel_name%**",
+    "add": {
+        "no_rss": ":warning: Il faut spécifier l'URL du flux RSS après la commande! Exemple : `@Botcast add http://example.com/rss`",
+        "ok": ":tada: Le flux `%feed_url%` a bien été ajouté dans la base!",
+        "not_valid": ":warning: Le flux spécifié `%feed_url%` n'est pas un flux RSS valide!",
+        "inside": ":warning: Le flux est déjà dans la base!",
+        "define_here": ":warning: Merci de commencer par définir le channel par défaut pour recevoir les actualités sur les podcasts avec la commande `here`!"
+    },
+    "not_admin": ":no_entry: Désolé %username% mais tu n'as pas les droits d'administration dans **%guild_name%**",
+    "error_max_feed": ":warning: Vous essayez de modifier le flux numéro **%feed_numer%** mais les numéros vont seulement jusqu'à **%max_feed_number%**! Utilisez `@botcast list` pour voir les numéros!",
+    "error_min_feed": ":warning: Les numéros de flux ne vont que jusqu'à **0**! Utilisez `@botcast list` pour voir les numéros!"
+}
