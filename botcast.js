@@ -20,13 +20,15 @@ client.on('ready', () => {
 
 
 function checkRSS() {
-	db.each("SELECT * FROM podcast", function(err, row) {
-		parser.parseURL(row.feed_url, function(err, feed) {
+	db.each("SELECT * FROM podcast", function (err, row) {
+		parser.parseURL(row.feed_url, function (err, feed) {
 			if (err) {
 				client.users.get("136747654871777280").send(`:x: __**Erreur :**__ Le flux RSS ${row.feed_url} n'est pas trouvé. \n\`\`\`${err}\n\`\`\``)
 			} else {
+				if (feed.items.length === 0) { return }
+
 				feed.items = feed.items.sort(sortItems);
-				
+
 				if (row.last_guid == "" || feed.items[0].guid != row.last_guid) {
 					db.run("UPDATE podcast SET last_guid='" + feed.items[0].guid + "' WHERE feed_url='" + row.feed_url + "' AND serveur_id='" + row.serveur_id + "'")
 					sendMessage(row, feed)
@@ -40,7 +42,7 @@ function sortItems(a, b) {
 	let date_a = new Date(a.isoDate);
 	let date_b = new Date(b.isoDate);
 
-	if (date_a < date_b ) {
+	if (date_a < date_b) {
 		return 1;
 	} else if (date_a > date_b) {
 		return -1;
@@ -50,12 +52,12 @@ function sortItems(a, b) {
 }
 
 function sendMessage(row_podcast, feed) {
-	db.all(`SELECT * FROM serveur WHERE serveur_id="${row_podcast.serveur_id}"`, function(err, rows) {
+	db.all(`SELECT * FROM serveur WHERE serveur_id="${row_podcast.serveur_id}"`, function (err, rows) {
 		if (row_podcast.channel != 0) {
 			chan = client.channels.get(row_podcast.channel);
 
 			if (chan == undefined) {
-				chan = client.channels.get(rows[0].default_channel)			
+				chan = client.channels.get(rows[0].default_channel)
 			}
 		} else {
 			chan = client.channels.get(rows[0].default_channel)
@@ -91,37 +93,37 @@ function sendMessage(row_podcast, feed) {
 		}
 
 		const embed = {
-			"content" : "@everyone :tada: Un épisode vient de sortir!",
+			"content": "@everyone :tada: Un épisode vient de sortir!",
 			"author": {
 				"name": feed.items[0].title,
 				"url": feed.items[0].link
-			  },
+			},
 			"description": feed.title,
 			"color": 16098851,
 			"timestamp": feed.items[0].isoDate,
 			"footer": {
-			  "text": "Botcast"
+				"text": "Botcast"
 			},
 			"thumbnail": {
-			  "url": feed.items[0].itunes.image
+				"url": feed.items[0].itunes.image
 			},
 			"fields": [
-			  {
-				"name": "Description",
-				"value": desc
-			  },
-			  {
-				"name": "Posté par",
-				"value": author,
-				"inline": true
-			  },
-			  {
-				"name": "Fichier audio",
-				"value": "[Ecouter](" + feed.items[0].enclosure.url + ")",
-				"inline": true
-			  }
+				{
+					"name": "Description",
+					"value": desc
+				},
+				{
+					"name": "Posté par",
+					"value": author,
+					"inline": true
+				},
+				{
+					"name": "Fichier audio",
+					"value": "[Ecouter](" + feed.items[0].enclosure.url + ")",
+					"inline": true
+				}
 			]
-		  };
+		};
 
 		if (rows[0].default_message == undefined || rows[0].default_message == "") {
 			mess = ":tada: Un nouvel épisode de **%feed_title%** est sorti!"
@@ -142,8 +144,8 @@ function sendMessage(row_podcast, feed) {
 		} else {
 			chan.send(mess)
 		}
-		
-		chan.send({embed})
+
+		chan.send({ embed })
 	})
 }
 
@@ -152,8 +154,8 @@ function isAdmin(message) {
 }
 
 client.on('message', message => {
-	if(message.author.bot) return;
-	if(!message.content.startsWith(`<@!${client.user.id}>`) && !message.content.startsWith(config.prefix)) return;
+	if (message.author.bot) return;
+	if (!message.content.startsWith(`<@!${client.user.id}>`) && !message.content.startsWith(config.prefix)) return;
 
 	let args;
 
@@ -165,12 +167,12 @@ client.on('message', message => {
 		args = message.content.split(/[ ]+/);
 	}
 
-	switch(args[1]) {
+	switch (args[1]) {
 		case "here":
 			message.delete();
 			if (args.length == 2) {
 				if (isAdmin(message)) {
-					db.all(`SELECT * FROM serveur WHERE serveur_id="${message.guild.id}"`, function(err, rows) {
+					db.all(`SELECT * FROM serveur WHERE serveur_id="${message.guild.id}"`, function (err, rows) {
 						if (rows.length != 0) {
 							db.run(`UPDATE serveur SET default_channel="${message.channel.id}" WHERE serveur_id="${message.guild.id}"`)
 							message.channel.send(":satellite: Le channel d'annonce par défaut a été définit ici, dans le channel **" + message.channel.name + "**")
@@ -185,10 +187,10 @@ client.on('message', message => {
 					message.author.send(":no_entry: Désolé " + message.author.username + " mais tu n'as pas les droits d'administration dans **" + message.guild.name + "**");
 				}
 			} else {
-				db.all(`SELECT * FROM podcast WHERE serveur_id="${message.guild.id}"`, function(err, rows) {
+				db.all(`SELECT * FROM podcast WHERE serveur_id="${message.guild.id}"`, function (err, rows) {
 					if (args[2] >= rows.length) {
-						message.channel.send(":warning: Vous essayez de modifier le flux numéro **" + args[2] + "** mais les numéros vont seulement jusqu'à **" + rows.length-1 + "**! Utilisez `@botcast list` pour voir les numéros!")
-					} else if (args[2] < 0 ) {
+						message.channel.send(":warning: Vous essayez de modifier le flux numéro **" + args[2] + "** mais les numéros vont seulement jusqu'à **" + rows.length - 1 + "**! Utilisez `@botcast list` pour voir les numéros!")
+					} else if (args[2] < 0) {
 						message.channel.send(":warning: Les numéros de flux ne vont que jusqu'à **0**! Utilisez `@botcast list` pour voir les numéros!")
 					} else {
 						db.run(`UPDATE podcast SET channel="${message.channel.id}" WHERE feed_url="${rows[args[2]].feed_url}" AND serveur_id="${message.guild.id}"`)
@@ -201,16 +203,16 @@ client.on('message', message => {
 		case "add":
 			message.delete();
 			if (isAdmin(message)) {
-				db.all(`SELECT * FROM serveur WHERE serveur_id="${message.guild.id}"`, function(err, rows) {
+				db.all(`SELECT * FROM serveur WHERE serveur_id="${message.guild.id}"`, function (err, rows) {
 					if (rows.length != 0) {
 						if (args.length <= 2) {
 							message.channel.send(":warning: Il faut spécifier l'URL du flux RSS après la commande! Exemple : `@Botcast add http://example.com/rss`")
 							return;
 						}
-						db.all(`SELECT * FROM podcast WHERE serveur_id="${message.guild.id}" AND feed_url="${args[2]}"`, function(err, rows) {
+						db.all(`SELECT * FROM podcast WHERE serveur_id="${message.guild.id}" AND feed_url="${args[2]}"`, function (err, rows) {
 							if (rows.length == 0) {
 								var parser = new Parser();
-								parser.parseURL(args[2], function(err, feed) {
+								parser.parseURL(args[2], function (err, feed) {
 									if (feed != undefined) {
 										db.run(`INSERT INTO podcast (serveur_id, feed_url, notif, channel) VALUES ("${message.guild.id}", "${args[2]}", "0", "0")`)
 										message.channel.send(":tada: Le flux `" + args[2] + "` a bien été ajouté dans la base!")
@@ -283,14 +285,14 @@ client.on('message', message => {
 		case "list":
 			message.delete();
 			if (isAdmin(message)) {
-				db.all(`SELECT * FROM podcast WHERE serveur_id="${message.guild.id}"`, function(err, rows) {
+				db.all(`SELECT * FROM podcast WHERE serveur_id="${message.guild.id}"`, function (err, rows) {
 					if (rows.length != 0) {
 						to_send = ":page_facing_up: Il y a actuellement " + rows.length + " flux enregistrés sur ce serveur."
 
-						for(i = 0; i < rows.length; i++) {
+						for (i = 0; i < rows.length; i++) {
 							to_send = to_send + "\n`[" + i + "]` - " + rows[i].feed_url
 
-							if (to_send.length > 1500 && i != rows.length-1) {
+							if (to_send.length > 1500 && i != rows.length - 1) {
 								message.channel.send(to_send)
 								to_send = ""
 							}
@@ -312,10 +314,10 @@ client.on('message', message => {
 				if (args.length != 3) {
 					message.channel.send(":warning: Vous devez spécifier un numéro de flux. Pour les voir, utilisez la commande `@botcast list`")
 				} else {
-					db.all(`SELECT * FROM podcast WHERE serveur_id="${message.guild.id}"`, function(err, rows) {
+					db.all(`SELECT * FROM podcast WHERE serveur_id="${message.guild.id}"`, function (err, rows) {
 						if (args[2] >= rows.length) {
-							message.channel.send(":warning: Vous essayez de supprimer le flux numéro **" + args[2] + "** mais les numéros vont seulement jusqu'à **" + rows.length-1 + "**! Utilisez `@botcast list` pour voir les numéros!")
-						} else if (args[2] < 0 ) {
+							message.channel.send(":warning: Vous essayez de supprimer le flux numéro **" + args[2] + "** mais les numéros vont seulement jusqu'à **" + rows.length - 1 + "**! Utilisez `@botcast list` pour voir les numéros!")
+						} else if (args[2] < 0) {
 							message.channel.send(":warning: Les numéros de flux ne vont que jusqu'à **0**! Utilisez `@botcast list` pour voir les numéros!")
 						} else {
 							db.run(`DELETE FROM podcast WHERE feed_url="${rows[args[2]].feed_url}" AND serveur_id="${message.guild.id}"`)
@@ -331,13 +333,13 @@ client.on('message', message => {
 		case "notif":
 			message.delete();
 			if (isAdmin(message)) {
-				db.all(`SELECT * FROM serveur WHERE serveur_id="${message.guild.id}"`, function(err, rows) {
+				db.all(`SELECT * FROM serveur WHERE serveur_id="${message.guild.id}"`, function (err, rows) {
 					if (rows.length != 0) {
 						if (args.length <= 2) {
 							message.channel.send(`:warning: Il faut spécifier **default** ou alors un numéro de podcast!`);
 							return;
 						}
-						
+
 						if (args[2] == "default") {
 							if (args.length <= 3) {
 								if (rows[0].default_notif == 0) {
@@ -358,20 +360,20 @@ client.on('message', message => {
 									message.channel.send(":x: La notification par défaut est maintenant désactivée!")
 								} else if (args[3].match(/<@&[0-9]*>/) != undefined) {
 									db.run(`UPDATE serveur SET default_notif=${args[3].match(/<@&[0-9]*>/)[0].replace("<@&", "").replace(">", "")} WHERE serveur_id="${message.guild.id}"`)
-									message.channel.send(":white_check_mark: La notification par défaut est activée pour " + args[3].match(/<@&[0-9]*>/)[0] +"!")								
+									message.channel.send(":white_check_mark: La notification par défaut est activée pour " + args[3].match(/<@&[0-9]*>/)[0] + "!")
 								} else {
 									message.author.send(":warning: Il faut spécifier un booléen `true/false` ou un role")
 								}
 							}
 						} else {
-							db.all(`SELECT * FROM podcast WHERE serveur_id="${message.guild.id}"`, function(err, rows) {
+							db.all(`SELECT * FROM podcast WHERE serveur_id="${message.guild.id}"`, function (err, rows) {
 								if (args[2] >= rows.length) {
-									message.channel.send(":warning: Vous essayez de modifier le flux numéro **" + args[2] + "** mais les numéros vont seulement jusqu'à **" + rows.length-1 + "**! Utilisez `@botcast list` pour voir les numéros!")
-								} else if (args[2] < 0 ) {
+									message.channel.send(":warning: Vous essayez de modifier le flux numéro **" + args[2] + "** mais les numéros vont seulement jusqu'à **" + rows.length - 1 + "**! Utilisez `@botcast list` pour voir les numéros!")
+								} else if (args[2] < 0) {
 									message.channel.send(":warning: Les numéros de flux ne vont que jusqu'à **0**! Utilisez `@botcast list` pour voir les numéros!")
 								} else {
 									if (args.length <= 3) {
-										if ( rows[args[2]].notif == 0) {
+										if (rows[args[2]].notif == 0) {
 											value = "La notification pour " + rows[args[2]].feed_url + " est désactivée."
 										} else if (rows[args[2]].notif == 1) {
 											value = "La notification pour " + rows[args[2]].feed_url + " est sur everyone."
@@ -383,13 +385,13 @@ client.on('message', message => {
 									} else {
 										if (args[3].toLowerCase() == "true") {
 											db.run(`UPDATE podcast SET notif=1 WHERE feed_url="${rows[args[2]].feed_url}" AND serveur_id="${message.guild.id}"`)
-											message.channel.send(":white_check_mark: La notification pour " + rows[args[2]].feed_url +" est maintenant sur everyone!")
+											message.channel.send(":white_check_mark: La notification pour " + rows[args[2]].feed_url + " est maintenant sur everyone!")
 										} else if (args[3].toLowerCase() == "false") {
 											db.run(`UPDATE podcast SET notif=0 WHERE feed_url="${rows[args[2]].feed_url}" AND serveur_id="${message.guild.id}"`)
-											message.channel.send(":x: La notification pour " + rows[args[2]].feed_url +" est maintenant désactivée!")
+											message.channel.send(":x: La notification pour " + rows[args[2]].feed_url + " est maintenant désactivée!")
 										} else if (args[3].match(/<@&[0-9]*>/) != undefined) {
 											db.run(`UPDATE podcast SET notif=${args[3].match(/<@&[0-9]*>/)[0].replace("<@&", "").replace(">", "")} WHERE feed_url="${rows[args[2]].feed_url}" AND serveur_id="${message.guild.id}"`)
-											message.channel.send(":white_check_mark: La notification pour " + rows[args[2]].feed_url + " est activée sur " + args[3].match(/<@&[0-9]*>/)[0] +"!")								
+											message.channel.send(":white_check_mark: La notification pour " + rows[args[2]].feed_url + " est activée sur " + args[3].match(/<@&[0-9]*>/)[0] + "!")
 										} else {
 											message.author.send(":warning: Il faut spécifier un booléen `true/false` ou un role")
 										}
@@ -412,8 +414,8 @@ client.on('message', message => {
 			if (isAdmin(message)) {
 				if (args.length != 3) {
 					db.run(`UPDATE podcast SET last_guid=null WHERE serveur_id="${message.guild.id}"`)
-					db.each(`SELECT * FROM podcast WHERE serveur_id="${message.guild.id}"`, function(err, row) {
-						parser.parseURL(row.feed_url, function(err, feed) {
+					db.each(`SELECT * FROM podcast WHERE serveur_id="${message.guild.id}"`, function (err, row) {
+						parser.parseURL(row.feed_url, function (err, feed) {
 							feed.items = feed.items.sort(sortItems);
 
 							db.run("UPDATE podcast SET last_guid='" + feed.items[0].guid + "' WHERE feed_url='" + row.feed_url + "'")
@@ -421,18 +423,18 @@ client.on('message', message => {
 						})
 					})
 				} else {
-					db.all(`SELECT * FROM podcast WHERE serveur_id="${message.guild.id}"`, function(err, rows) {
+					db.all(`SELECT * FROM podcast WHERE serveur_id="${message.guild.id}"`, function (err, rows) {
 						if (args[2] >= rows.length) {
-							message.channel.send(":warning: Vous essayez de mettre à jour le flux numéro **" + args[2] + "** mais les numéros vont seulement jusqu'à **" + rows.length-1 + "**! Utilisez `@botcast list` pour voir les numéros!")
-						} else if (args[2] < 0 ) {
+							message.channel.send(":warning: Vous essayez de mettre à jour le flux numéro **" + args[2] + "** mais les numéros vont seulement jusqu'à **" + rows.length - 1 + "**! Utilisez `@botcast list` pour voir les numéros!")
+						} else if (args[2] < 0) {
 							message.channel.send(":warning: Les numéros de flux ne vont que jusqu'à **0**! Utilisez `@botcast list` pour voir les numéros!")
 						} else {
 							db.run(`UPDATE podcast SET last_guid=null WHERE feed_url="${rows[args[2]].feed_url}" AND serveur_id="${message.guild.id}"`)
-							db.each(`SELECT * FROM podcast WHERE feed_url="${rows[args[2]].feed_url}" AND serveur_id="${message.guild.id}"`, function(err, row) {
-								parser.parseURL(row.feed_url, function(err, feed) {
+							db.each(`SELECT * FROM podcast WHERE feed_url="${rows[args[2]].feed_url}" AND serveur_id="${message.guild.id}"`, function (err, row) {
+								parser.parseURL(row.feed_url, function (err, feed) {
 									feed.items = feed.items.sort(sortItems);
 
-									db.run("UPDATE podcast SET last_guid='" + feed.items[0].guid + "' WHERE feed_url='" + row.feed_url + "' AND serveur_id='" +message.guild.id + "'")
+									db.run("UPDATE podcast SET last_guid='" + feed.items[0].guid + "' WHERE feed_url='" + row.feed_url + "' AND serveur_id='" + message.guild.id + "'")
 									sendMessage(row, feed)
 								})
 							})
@@ -444,7 +446,7 @@ client.on('message', message => {
 
 		case "message":
 			if (isAdmin(message)) {
-				db.all(`SELECT * FROM serveur WHERE serveur_id="${message.guild.id}"`, function(err, rows) {
+				db.all(`SELECT * FROM serveur WHERE serveur_id="${message.guild.id}"`, function (err, rows) {
 					if (rows.length != 0) {
 						if (args.length == 2) {
 							db.run(`UPDATE serveur SET default_message="" WHERE serveur_id=${message.guild.id}`)
@@ -452,7 +454,7 @@ client.on('message', message => {
 						} else {
 							mess = args.slice(2).join(" ")
 							db.run(`UPDATE serveur SET default_message="${mess}" WHERE serveur_id=${message.guild.id}`)
-							
+
 							message.channel.send(":pen_fountain: Le message d'annonce a été modifié!\n> " + mess.replace("%feed_title%", "Exemple Titre Flux").replace("%post_title%", "Exemple Titre Publication").replace("%post_link%", "https://example.com"))
 						}
 					} else {
