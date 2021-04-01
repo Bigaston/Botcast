@@ -1,0 +1,27 @@
+{
+  "name": "botcast",
+  "version": "2.0.0",
+  "description": "",
+  "main": "botcast.js",
+  "scripts": {
+    "add_command": "node ./cli/initCommand.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Bigaston/Botcast.git"
+  },
+  "author": "Bigaston",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/Bigaston/Botcast/issues"
+  },
+  "homepage": "https://github.com/Bigaston/Botcast#readme",
+  "dependencies": {
+    "axios": "^0.21.1",
+    "discord.js": "^12.5.1",
+    "dotenv": "^8.2.0",
+    "rss-parser": "^3.12.0",
+    "sequelize": "^6.5.1",
+    "slash-commands": "^1.4.0"
+  }
+}
