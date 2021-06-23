@@ -1,12 +1,9 @@
 {
   "compilerOptions": {
-    "target": "es5",
-    "allowJs": false,
-    "strict": true,
-    "forceConsistentCasingInFileNames": true,
-    "noFallthroughCasesInSwitch": true,
-    "moduleResolution": "node",
-    "resolveJsonModule": true,
+    "lib": ["es6"],
+    "module": "commonjs",
+    "target": "ES5",
     "noEmit": true,
-  }
+    "allowJs": false
+  },
 }
