@@ -19,6 +19,6 @@
 	"dependencies": {
 		"discord.js": "^11.5.1",
 		"rss-parser": "^3.7.2",
-		"sqlite3": "^5.0.0"
+		"sqlite3": "^5.0.3"
 	}
 }
