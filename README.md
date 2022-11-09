@@ -1,3 +1,7 @@
+# ⚠️ BOTCAST EST MAINTENANT ARCHIVE
+Ce repertoire reste en ligne pour ceux qui voudraient améliorer/modifier le système mais le service n'est plus proposé pour l'instant en tant que tel.
+Si vous avez un serveur vous pouvez utiliser [BotcastWebhook](https://github.com/Bigaston/BotcastWebhooks)
+
 # Botcast
 ## Un bot Discord pour envoyer des alertes quand vous sortez un nouvel épisode
 
@@ -7,7 +11,7 @@ Exemple d'alerte :
 
 ### Mise en place
 
-1. [🤖 Inviter le bot](https://discordapp.com/oauth2/authorize?client_id=601394082689974282&scope=bot&permissions=191552)
+1. ~~🤖 Inviter le bot~~
 2. Allez dans le channel où vous voulez envoyer les messages d'alertes et exécutez `@botcast here`
 3. Ajoutez votre premier flux avec `@botcast add http://adresse_du_flux`
 4. Attendez quelques minutes et vous devriez avoir un message annonçant la sortie du dernier épisode du flux.
